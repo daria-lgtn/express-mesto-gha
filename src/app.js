@@ -20,9 +20,22 @@ mongoose.connect('mongodb://localhost:27017/mestodb');
 
 app.use('/users', require('./routes/user'));
 app.use('/cards', require('./routes/card'));
-// app.use('/films', require('./routes/films'));
-// app.use('/directors', require('./routes/directors'));
-// app.use(express.static(path.join(__dirname, 'public')));
+
+app.use((req, res) => {
+  res.status(404).send('Invalid route');
+});
+
+app.use((err, req, res, next) => {
+  if (err) {
+    if (err.name === 'ValidationError') {
+      res.status(400).send(err.message);
+    } else {
+      res.status(500).send(err.message);
+    }
+  } else {
+    next();
+  }
+});
 
 app.listen(PORT, () => {
   console.log(`localhost:${PORT}`);
