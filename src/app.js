@@ -1,6 +1,7 @@
 const express = require('express');
 const mongoose = require('mongoose');
-const bodyParser = require('body-parser');
+const { NotFoundError } = require('./errors/NotFound');
+const { ERROR_SERVER, ERROR_VALIDATION, ERROR_NOT_FOUND } = require('./constants');
 
 const { PORT = 3000 } = process.env;
 const app = express();
@@ -13,8 +14,7 @@ app.use((req, res, next) => {
   next();
 });
 
-app.use(bodyParser.json());
-app.use(bodyParser.urlencoded({ extended: true }));
+app.use(express.json());
 
 mongoose.connect('mongodb://localhost:27017/mestodb');
 
@@ -26,15 +26,15 @@ app.use((req, res) => {
 });
 
 app.use((err, req, res, next) => {
-  if (err) {
-    if (err.name === 'ValidationError') {
-      res.status(400).send(err.message);
-    } else {
-      res.status(500).send(err.message);
-    }
+  if (err instanceof mongoose.Error.ValidationError) {
+    res.status(ERROR_VALIDATION).send(err.message);
+  } else if (err instanceof NotFoundError) {
+    res.status(ERROR_NOT_FOUND).send(err.message);
   } else {
-    next();
+    res.status(ERROR_SERVER).send(err.message);
   }
+
+  next();
 });
 
 app.listen(PORT, () => {

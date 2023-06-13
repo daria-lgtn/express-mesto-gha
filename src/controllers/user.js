@@ -1,4 +1,5 @@
 const User = require('../models/user');
+const { NotFoundError } = require('../errors/NotFound');
 
 module.exports.getUsers = (req, res, next) => {
   User.find({})
@@ -10,7 +11,13 @@ module.exports.getUserById = (req, res, next) => {
   const { userId } = req.params;
 
   User.findOne({ _id: userId })
-    .then((users) => res.send({ data: users }))
+    .then((user) => {
+      if (user) {
+        res.send({ data: user });
+      } else {
+        throw new NotFoundError();
+      }
+    })
     .catch(next);
 };
 
@@ -26,9 +33,36 @@ module.exports.updateMe = (req, res, next) => {
   const userId = req.user._id;
   const { name, about, avatar } = req.body;
 
-  User.updateOne({
-    _id: userId, name, about, avatar,
+  User.findByIdAndUpdate(userId, {
+    name, about, avatar,
+  }, {
+    runValidators: true,
   })
-    .then((user) => res.send({ data: user }))
+    .then((user) => {
+      if (user) {
+        res.send({ data: user });
+      } else {
+        throw new NotFoundError();
+      }
+    })
+    .catch(next);
+};
+
+module.exports.updateMeAvatar = (req, res, next) => {
+  const userId = req.user._id;
+  const { avatar } = req.body;
+
+  User.findByIdAndUpdate(userId, {
+    avatar,
+  }, {
+    runValidators: true,
+  })
+    .then((user) => {
+      if (user) {
+        res.send({ data: user });
+      } else {
+        throw new NotFoundError();
+      }
+    })
     .catch(next);
 };

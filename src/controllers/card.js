@@ -1,4 +1,5 @@
 const Card = require('../models/card');
+const { NotFoundError } = require('../errors/NotFound');
 
 module.exports.getCards = (req, res, next) => {
   Card.find({})
@@ -11,15 +12,21 @@ module.exports.createCard = (req, res, next) => {
   const { name, link } = req.body;
 
   Card.create({ name, link, owner: userId })
-    .then((user) => res.send({ data: user }))
+    .then((card) => res.send({ data: card }))
     .catch(next);
 };
 
 module.exports.deleteCardById = (req, res, next) => {
   const { cardId } = req.params;
 
-  Card.deleteOne({ _id: cardId })
-    .then((user) => res.send({ data: user }))
+  Card.findByIdAndDelete(cardId)
+    .then((card) => {
+      if (card) {
+        res.send({ data: card });
+      } else {
+        throw new NotFoundError();
+      }
+    })
     .catch(next);
 };
 
@@ -32,7 +39,13 @@ module.exports.like = (req, res, next) => {
     { $addToSet: { likes: userId } },
     { new: true },
   )
-    .then((user) => res.send({ data: user }))
+    .then((card) => {
+      if (card) {
+        res.send({ data: card });
+      } else {
+        throw new NotFoundError();
+      }
+    })
     .catch(next);
 };
 
@@ -45,6 +58,12 @@ module.exports.likeUndo = (req, res, next) => {
     { $pull: { likes: userId } },
     { new: true },
   )
-    .then((user) => res.send({ data: user }))
+    .then((card) => {
+      if (card) {
+        res.send({ data: card });
+      } else {
+        throw new NotFoundError();
+      }
+    })
     .catch(next);
 };
