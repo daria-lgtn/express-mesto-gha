@@ -31,12 +31,13 @@ module.exports.createUser = (req, res, next) => {
 
 module.exports.updateMe = (req, res, next) => {
   const userId = req.user._id;
-  const { name, about, avatar } = req.body;
+  const { name, about } = req.body;
 
   User.findByIdAndUpdate(userId, {
-    name, about, avatar,
+    name, about,
   }, {
     runValidators: true,
+    new: true,
   })
     .then((user) => {
       if (user) {
@@ -56,6 +57,7 @@ module.exports.updateMeAvatar = (req, res, next) => {
     avatar,
   }, {
     runValidators: true,
+    new: true,
   })
     .then((user) => {
       if (user) {

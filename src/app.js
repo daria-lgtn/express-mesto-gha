@@ -22,11 +22,12 @@ app.use('/users', require('./routes/user'));
 app.use('/cards', require('./routes/card'));
 
 app.use((req, res) => {
-  res.status(404).send('Invalid route');
+  res.status(ERROR_NOT_FOUND).send('Invalid route');
 });
 
 app.use((err, req, res, next) => {
-  if (err instanceof mongoose.Error.ValidationError) {
+  if ((err instanceof mongoose.Error.ValidationError)
+  || (err instanceof mongoose.Error.CastError)) {
     res.status(ERROR_VALIDATION).send(err.message);
   } else if (err instanceof NotFoundError) {
     res.status(ERROR_NOT_FOUND).send(err.message);
