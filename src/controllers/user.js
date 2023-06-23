@@ -1,10 +1,42 @@
+const bcrypt = require('bcryptjs');
+const jwt = require('jsonwebtoken');
 const User = require('../models/user');
+const { ERROR_UNAUTHORIZED, JWT_KEY } = require('../constants');
 const { NotFoundError } = require('../errors/NotFound');
 
 module.exports.getUsers = (req, res, next) => {
   User.find({})
     .then((users) => res.send({ data: users }))
     .catch(next);
+};
+
+module.exports.getCurrentUser = (req, res, next) => {
+  const userId = req.user._id;
+  User.findOne({ _id: userId })
+    .then((user) => {
+      if (user) {
+        res.send({ data: user });
+      } else {
+        throw new NotFoundError();
+      }
+    })
+    .catch(next);
+};
+
+module.exports.login = (req, res) => {
+  const { email, password } = req.body;
+
+  User.findUserByCredentials(email, password)
+    .then((user) => {
+      const token = jwt.sign({ _id: user._id }, JWT_KEY);
+
+      res.send({ token });
+    })
+    .catch((err) => {
+      res
+        .status(ERROR_UNAUTHORIZED)
+        .send({ message: err.message });
+    });
 };
 
 module.exports.getUserById = (req, res, next) => {
@@ -22,9 +54,18 @@ module.exports.getUserById = (req, res, next) => {
 };
 
 module.exports.createUser = (req, res, next) => {
-  const { name, about, avatar } = req.body;
+  const {
+    name, about, avatar, email, password,
+  } = req.body;
 
-  User.create({ name, about, avatar })
+  bcrypt.hash(password, 10)
+    .then((hash) => User.create({
+      name,
+      about,
+      avatar,
+      email,
+      password: hash,
+    }))
     .then((user) => res.send({ data: user }))
     .catch(next);
 };
