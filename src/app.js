@@ -8,9 +8,7 @@ const { auth } = require('./middlewares/auth');
 const {
   ERROR_SERVER, ERROR_VALIDATION, ERROR_UNAUTHORIZED, ERROR_NOT_FOUND,
 } = require('./constants');
-const { NotAuthorized } = require('./errors/NotAuthorized');
-const { InvalidCredentials } = require('./errors/InvalidCredentials');
-const { InvalidRoute } = require('./errors/InvalidRoute');
+const { ErrorAuthorization } = require('./errors/ErrorAuthorization');
 
 const { PORT = 3000 } = process.env;
 const app = express();
@@ -27,26 +25,20 @@ app.use(auth);
 app.use('/users', require('./routes/user'));
 app.use('/cards', require('./routes/card'));
 
-app.use(() => {
-  throw new InvalidRoute();
-});
+app.use((req, res, next) => next(new NotFoundError('Некорректный маршрут')));
 
 app.use((err, req, res, next) => {
   console.log(err.message);
 
   if ((err instanceof mongoose.Error.ValidationError)
   || (err instanceof mongoose.Error.CastError)) {
-    res.status(ERROR_VALIDATION).send();
+    res.status(ERROR_VALIDATION).send(err.message);
   } else if (err instanceof NotFoundError) {
-    res.status(ERROR_NOT_FOUND).send();
-  } else if (err instanceof NotAuthorized) {
-    res.status(ERROR_UNAUTHORIZED).send();
-  } else if (err instanceof InvalidCredentials) {
-    res.status(ERROR_UNAUTHORIZED).send();
-  } else if (err instanceof InvalidRoute) {
-    res.status(ERROR_NOT_FOUND).send();
+    res.status(ERROR_NOT_FOUND).send(err.message);
+  } else if (err instanceof ErrorAuthorization) {
+    res.status(ERROR_UNAUTHORIZED).send(err.message);
   } else {
-    res.status(ERROR_SERVER).send();
+    res.status(ERROR_SERVER).send(err.message);
   }
 
   next();

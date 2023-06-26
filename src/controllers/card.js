@@ -1,5 +1,6 @@
 const Card = require('../models/card');
 const { NotFoundError } = require('../errors/NotFound');
+const { ErrorAuthorization } = require('../errors/ErrorAuthorization');
 
 module.exports.getCards = (req, res, next) => {
   Card.find({})
@@ -20,13 +21,19 @@ module.exports.deleteCardById = (req, res, next) => {
   const { cardId } = req.params;
   const userId = req.user._id;
 
-  Card.findOneAndDelete({ _id: cardId, owner: userId })
+  Card.findById({ _id: cardId })
     .then((card) => {
       if (card) {
-        res.send({ data: card });
+        if (card.owner !== userId) {
+          throw new ErrorAuthorization('Нет доступа');
+        } else {
+          return Card.findOneAndDelete({ _id: cardId });
+        }
       } else {
         throw new NotFoundError();
       }
+    }).then((card) => {
+      res.send({ data: card });
     })
     .catch(next);
 };

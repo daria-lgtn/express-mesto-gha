@@ -1,7 +1,7 @@
 const bcrypt = require('bcryptjs');
 const mongoose = require('mongoose');
 const validator = require('validator');
-const { NotAuthorized } = require('../errors/NotAuthorized');
+const { ErrorAuthorization } = require('../errors/ErrorAuthorization');
 
 const userSchema = new mongoose.Schema({
   email: {
@@ -41,13 +41,13 @@ userSchema.statics.findUserByCredentials = function (email, password) {
   return this.findOne({ email }).select('+password')
     .then((user) => {
       if (!user) {
-        throw new NotAuthorized();
+        throw new ErrorAuthorization('Необходима авторизация');
       }
 
       return bcrypt.compare(password, user.password)
         .then((matched) => {
           if (!matched) {
-            throw new NotAuthorized();
+            throw new ErrorAuthorization('Необходима авторизация');
           }
 
           return user;
