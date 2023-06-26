@@ -1,7 +1,7 @@
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const User = require('../models/user');
-const { ERROR_UNAUTHORIZED, JWT_KEY } = require('../constants');
+const { JWT_KEY } = require('../constants');
 const { NotFoundError } = require('../errors/NotFound');
 
 module.exports.getUsers = (req, res, next) => {
@@ -23,7 +23,7 @@ module.exports.getCurrentUser = (req, res, next) => {
     .catch(next);
 };
 
-module.exports.login = (req, res) => {
+module.exports.login = (req, res, next) => {
   const { email, password } = req.body;
 
   User.findUserByCredentials(email, password)
@@ -32,11 +32,7 @@ module.exports.login = (req, res) => {
 
       res.send({ token });
     })
-    .catch((err) => {
-      res
-        .status(ERROR_UNAUTHORIZED)
-        .send({ message: err.message });
-    });
+    .catch(next);
 };
 
 module.exports.getUserById = (req, res, next) => {
