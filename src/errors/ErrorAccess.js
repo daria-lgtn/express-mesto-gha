@@ -1,5 +1,5 @@
 class ErrorAccess extends Error {
-  constructor(message) {
+  constructor(message = 'Нет доступа') {
     super(message);
     this.name = 'ErrorAccess';
   }

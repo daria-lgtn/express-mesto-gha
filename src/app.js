@@ -8,7 +8,8 @@ const {
 } = require('./controllers/user');
 const { auth } = require('./middlewares/auth');
 const {
-  ERROR_SERVER, ERROR_VALIDATION, ERROR_UNAUTHORIZED, ERROR_NOT_FOUND,
+  ERROR_SERVER, ERROR_CONFLICT, ERROR_FORBIDDEN,
+  ERROR_VALIDATION, ERROR_UNAUTHORIZED, ERROR_NOT_FOUND,
 } = require('./constants');
 const { ErrorAuthorization } = require('./errors/ErrorAuthorization');
 const { ErrorAccess } = require('./errors/ErrorAccess');
@@ -45,16 +46,19 @@ app.use((req, res, next) => next(new NotFoundError('Некорректный м�
 app.use(errors());
 app.use((err, req, res, next) => {
   if ((err instanceof mongoose.Error.ValidationError)
-  || (err instanceof mongoose.Error.CastError)
-  || (err.code === CODE_DUPLICATE)) {
+  || (err instanceof mongoose.Error.CastError)) {
     res.status(ERROR_VALIDATION).send(err.message);
+  } else if (err.code === CODE_DUPLICATE) {
+    res.status(ERROR_CONFLICT).send(err.message);
   } else if (err instanceof NotFoundError) {
     res.status(ERROR_NOT_FOUND).send(err.message);
-  } else if (err instanceof ErrorAuthorization || err instanceof ErrorAccess) {
+  } else if (err instanceof ErrorAuthorization) {
     res.status(ERROR_UNAUTHORIZED).send(err.message);
+  } else if (err instanceof ErrorAccess) {
+    res.status(ERROR_FORBIDDEN).send(err.message);
   } else {
     console.log(err.message);
-    res.status(ERROR_SERVER).send();
+    res.status(ERROR_SERVER).send('Произошла ошибка на сервере');
   }
 
   next();

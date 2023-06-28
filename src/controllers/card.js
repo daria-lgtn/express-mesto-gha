@@ -25,7 +25,7 @@ module.exports.deleteCardById = (req, res, next) => {
     .then((card) => {
       if (card) {
         if (card.owner !== userId) {
-          throw new ErrorAccess('Нет доступа');
+          throw new ErrorAccess();
         } else {
           return Card.findOneAndDelete({ _id: cardId });
         }
