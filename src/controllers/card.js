@@ -1,6 +1,6 @@
 const Card = require('../models/card');
 const { NotFoundError } = require('../errors/NotFound');
-const { ErrorAuthorization } = require('../errors/ErrorAuthorization');
+const { ErrorAccess } = require('../errors/ErrorAccess');
 
 module.exports.getCards = (req, res, next) => {
   Card.find({})
@@ -25,7 +25,7 @@ module.exports.deleteCardById = (req, res, next) => {
     .then((card) => {
       if (card) {
         if (card.owner !== userId) {
-          throw new ErrorAuthorization('Нет доступа');
+          throw new ErrorAccess('Нет доступа');
         } else {
           return Card.findOneAndDelete({ _id: cardId });
         }
